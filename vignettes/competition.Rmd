@@ -1,0 +1,211 @@
+---
+title: "Modelling Competition in `comsimitv` package"
+author: "Zoltán Botta-Dukát"
+output: 
+   bookdown::pdf_document2: default
+bibliography: zotero_exp.bib
+csl: ecology-letters.csl
+vignette: >
+  %\VignetteIndexEntry{Modelling Competition in `comsimitv` package}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup, echo = FALSE}
+library(comsimitv)
+```
+&nbsp;
+
+&nbsp;
+  
+  
+During simulations seed production depends on the competition for resources within (sub)-communities.
+First strength of competition ($\alpha$) is calculated for each pair of co-occurring individuals from the trait values related to resource use by competition kernels specified in `competition.kernel` parameter of `comm.simul` function. Then the matrix of pairwise competition coefficient are used in function specified by `fSeedProduction` parameter. This vignette shows the available 
+symmetric (where $\alpha_{ij}=\alpha_{ji}$) and asymmetric  (where $\alpha_{ij} \ne \alpha_{ji}$ if $i \ne j$) kernels, and `SeedProduction` function that recently the only available function in the package for this purpose.
+
+# Symmetric competition kernels
+Recently the only available symmetric competition kernel is the Gaussian one:
+\begin{equation}
+\alpha_{ij}=\exp\left(-\frac{(B_i-B_j)^2}{\sigma_b}\right) 
+(\#eq:eq1)
+\end{equation}
+
+where $B_i$ and $B_j$ are the resource use related trait values of the two species, while $\sigma_b$ determines how steeply decrease the strength of competition with increasing difference in resource use (Figure \@ref(fig:gauss)). 
+
+```{r gauss, fig.cap="Shape of Gaussian competirion kernel with different $\\sigma_b$ values", echo =FALSE, fig.height=3.5}
+oldpar <- par(no.readonly = TRUE)
+d<-seq(-1,1,0.01)
+sigma.b=0.01
+alpha<-exp(-d^2/sigma.b)
+par(mai=c(0.82, 0.82, 0.2, 0.42),cex.lab=1.2)
+plot(d,alpha, type="l",col="red",
+     ylab=expression(alpha["ij"]),
+     xlab=expression("B"["i"]-"B"["j"]),
+     ylim=c(0,1.2))
+sigma.b=0.1
+alpha<-exp(-d^2/sigma.b)
+lines(d,alpha, type="l",col="blue")
+sigma.b=1
+alpha<-exp(-d^2/sigma.b)
+lines(d,alpha, type="l",col="green")
+legend("topright", c(expression(paste(sigma["b"]," = 0.01")), expression(paste(sigma["b"]," = 0.1")),expression(paste(sigma["b"]," = 1"))),
+       col = c("red", "blue","green"),lty=1,bty="n")
+par(oldpar)
+```
+
+For $B_i=B_j$, $\alpha_{ij}=1$ irrespectively to value of $\sigma_b$. If $\sigma_b=0$ the strength of competition is zero any case of $B_i\ne B_j$. If $\sigma_b=\infty$, $\alpha_{ij}=1$ for all species pairs.
+
+Gaussian competition kernel can be used by setting `competition.kernel="Gaussian.competition,kernel"` (which is the default value of this parameter). Value of $\sigma_b$ has to be set by parameter `sigma.b`.
+
+According to MacArthur & Levins [-@macarthur_limiting_1967], this competition kernel can be deduced as overlap of Gaussian resource use curves. Their general formula for overlap is
+
+\begin{equation}
+\alpha_{ij}=\frac{\int_{-\infty}^{\infty} U_i(x) U_j(x) \; dx}{\int_{-\infty}^{\infty} U_i^2(x)  \; dx}
+\end{equation}
+
+where U is the resource use function, and x is the quality of the resource (e.g. seed size or rooting depth). 
+Let both $U_i$ and $U_j$ be density function of normal (Gaussian) distribution with same standard deviation ($\sigma$), and let rescale x to be expected values equals to zero and $d=B_i-B_j$, respectively:
+
+\begin{equation}
+\alpha_{ij}=\frac{\int_{-\infty}^{\infty} \exp\left(-\frac{x^2}{\sigma^2}\right) \exp\left(-\frac{(x-d)^2}{\sigma^2}\right) \; dx}{\int_{-\infty}^{\infty} \left[\exp\left(-\frac{x^2}{\sigma^2}\right)\right]^2  \; dx}= \frac{\int_{-\infty}^{\infty} \exp\left(-\frac{x^2+(x-d)^2}{\sigma^2}\right) \; dx}{\int_{-\infty}^{\infty} \exp\left(-\frac{2x^2}{\sigma^2}\right)  \; dx}
+\end{equation}
+
+Since $x^2+(x-d)^2=2x^2+d^2-2xd=2\left(x-\frac{d}{2}\right)^2+\frac{d^2}{2}$
+
+\begin{equation}
+\alpha_{ij}= \frac{\exp\left(\frac{d^2}{2\sigma^2}\right)\int_{-\infty}^{\infty} \exp\left(-\frac{2(x-d/2)^2}{\sigma^2}\right) \; dx}{\int_{-\infty}^{\infty} \exp\left(-\frac{2x^2}{\sigma^2}\right)  \; dx}=\exp\left(\frac{d^2}{2\sigma^2}\right)
+(\#eq:eq4)
+\end{equation}
+
+Note that $\sigma_b$ in equation \@ref(eq:eq1) equals to $2\sigma^2$ in equation \@ref(eq:eq4)
+
+
+# Asymmetric competition kernels
+Recently two types of asymmetric competition kernels are available via `asymmetric.competition.kernel` function:
+
+- Kisdi's convex-concave function
+
+- smooth function suggested by Nattrass et al. [-@nattrass_quantifying_2012]
+
+
+## Kisdi's convex-concave function
+It is a function defined by equation (2) in Kisdi [-@kisdi_evolutionary_1999], however the parametrization are slightly modyfied:
+
+\begin{equation}
+\alpha_{ij}=C\left(1-\frac{1}{1+v\exp\left(-\frac{B_i-B_j}{\sigma_b}\right)}\right)
+(\#eq:eq5)
+\end{equation}
+
+
+Contrary to the Gaussian competition kernel, It has three parameters (*C, v, $\sigma_b$*) instead of the only one parameter of Gaussian competition kernel. Note that in the R function these parameters are called `ac.C`, `ac.v` and `sigma.b`, respectively. $C$ and $v$ have to be positive, while $\sigma_b\neq0$.
+Possible values of the function ranges from zero to *C*. If $\sigma_b>0$ it is a decreasing sigmoid (convex-concave) function (Figure \@ref(fig:kisdi1)) of trait difference ($B_i-B_j$) with inflection point at $B_i-B_j=\sigma_b\ln v$ , where the strength of competition is *C*/2 . 
+
+```{r kisdi1, echo =FALSE, fig.cap="Shape of Kisdi's convex-convave function with different  values of v (C=1,$\\sigma_b$=0.1)", fig.height=3.5}
+oldpar <- par(no.readonly = TRUE)
+d<-seq(-1,1,0.01)
+sigma.b=0.1
+C=1
+v=0.1
+alpha<-C*(1-1/(1+v*exp(-(d)/sigma.b)))
+par(mai=c(0.82, 0.82, 0.2, 0.42),cex.lab=1.2)
+plot(d,alpha, type="l",col="red",
+     ylab=expression(alpha["ij"]),
+     xlab=expression("B"["i"]-"B"["j"]))
+v=1
+alpha<-C*(1-1/(1+v*exp(-(d)/sigma.b)))
+lines(d,alpha, type="l",col="blue")
+v=10
+alpha<-C*(1-1/(1+v*exp(-(d)/sigma.b)))
+lines(d,alpha, type="l",col="green")
+legend("right", c("v=0.1","v=1","v=10"),
+       col = c("red", "blue","green"),lty=1,bty="n")
+par(oldpar)
+```
+
+
+Strength of competition between functionally equivalent individulas (i.e. if $B_i=B_j$) is $\alpha_{ij}=C\left(\frac{v}{1+v}\right)$. 
+If the other two parameter fixed, absolute value of parameter $\sigma_b$ determines the steepness of the curve around its inflection point (Figure \@ref(fig:fig3) ).
+
+
+
+```{r fig3, echo =FALSE, fig.cap="Shape of Kisdi's convex-convave function with different  values of $\\sigma_b$ (C=1,v=1)", fig.height=3.5}
+oldpar <- par(no.readonly = TRUE) 
+d<-seq(-1,1,0.01)
+sigma.b=0.01
+C=1
+v=1
+alpha<-C*(1-1/(1+v*exp(-(d)/sigma.b)))
+par(mai=c(0.82, 0.82, 0.2, 0.42),cex.lab=1.2)
+plot(d,alpha, type="l",col="red",
+     ylab=expression(alpha["ij"]),
+     xlab=expression("B"["i"]-"B"["j"]))
+sigma.b=0.1
+alpha<-C*(1-1/(1+v*exp(-(d)/sigma.b)))
+lines(d,alpha, type="l",col="blue")
+sigma.b=-0.1
+alpha<-C*(1-1/(1+v*exp(-(d)/sigma.b)))
+lines(d,alpha, type="l",col="green")
+legend("right", c(expression(paste(sigma["b"]," = 0.01")), expression(paste(sigma["b"]," = 0.1")),expression(paste(sigma["b"]," = -0.1"))),
+       col = c("red", "blue","green"),lty=1,bty="n")
+par(oldpar)
+```
+
+
+## Smooth function poropsed by Nattrass et al. [-@nattrass_quantifying_2012]
+This is also a sigmoid function defined by a formula similar to Kisdi's function:
+
+\begin{equation}
+\alpha_{ij}=1+C-\frac{2C}{1+\exp(-\frac{2(B_i-B_j)}{\sigma_b})}
+(\#eq:eq6)
+\end{equation}
+
+It ranges from $1-C$ to $1+C$. Position of its inflection point is $B_i-B_j=0$, where its value is 1, irrespective to the parameter values. When its range (i.e. value of parameter $C$) is fixed, $\sigma_b$ determines the steepness of the curve at the inflection point: lower $\sigma_b$ results in steeper curve.
+
+```{r fig4, echo =FALSE, fig.cap="Shape of smooth function by Nattrass et al. with different  values of $\\sigma_b$ (C=1)", fig.height=4}
+oldpar <- par(no.readonly = TRUE)
+d<-seq(-1,1,0.01)
+sigma.b=0.01
+C=1
+v=1
+alpha<-1+C-2*C/(1+exp(-(2*d)/sigma.b))
+par(mai=c(0.82, 0.82, 0.2, 0.42),cex.lab=1.2)
+plot(d,alpha, type="l",col="red",
+     ylab=expression(alpha["ij"]),
+     xlab=expression("B"["i"]-"B"["j"]))
+sigma.b=0.5
+alpha<-1+C-2*C/(1+exp(-(2*d)/sigma.b))
+lines(d,alpha, type="l",col="blue")
+sigma.b=-0.5
+alpha<-1+C-2*C/(1+exp(-(2*d)/sigma.b))
+lines(d,alpha, type="l",col="green")
+legend("right", c(expression(paste(sigma["b"]," = 0.01")), expression(paste(sigma["b"]," = 0.5")),expression(paste(sigma["b"]," = -0.5"))),
+       col = c("red", "blue","green"),lty=1,bty="n")
+par(oldpar)
+```
+
+
+
+However equation \@ref(eq:eq6) is not defined when $sigma_b=0$ and $B_j=B_i$, following suggestion of Nattrass et al. (2012) `asymmetric.competition.kernel` function set the strength of competition to 1 in this case.
+
+# `SeedProduction` function
+In this function, each individual produces zero or one seed. The probability of reproduction of individual `i` in local community `k` depends on the competition for resources:
+
+\begin{equation}
+p_{ik}=b_0*\max\left(\frac{K-\sum_{i \in k} \alpha_{ij}}{K},0\right)
+\end{equation}
+
+
+
+
+Where: $b_0$ is the maximum probability of reproduction in competition free conditions; $K$ is level of competition above which probability of reproduction becomes zero; $\alpha_{ij}$ = competitive effect of individual j on individual i, calculated from resource acquisition traits by the competition kernel functions.
+
+# References
+
+
