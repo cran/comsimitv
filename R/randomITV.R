@@ -15,6 +15,7 @@
 #'
 #'@param seeds Matrix of produced seeds (with mother'trait values) as produced by
 #'             \code{\link{SeedProduction}} function
+#'@param n.traits Number of traits
 #'@param distribs Types of the distributions of traits (see \code{\link{Gener.species.pool}})
 #'@param distr.parms Parameters of distribution (see \code{\link{Gener.species.pool}})
 #'@param sigma Matrix of variance-covariance matrix of traits (see \code{\link{Gener.species.pool}})
@@ -24,50 +25,49 @@
 #'             \code{\link{SeedProduction}} function
 
 randomITV<-function(seeds=matrix(),
-              distribs=rep("unif",3),
-              distr.parms=list(a=list(min=0,max=1),b=list(min=0,max=1),c=list(min=0,max=1)),
-              sigma=diag(1,3,3),ITV.ratio=0.01,...)
+                    n.traits=3,
+                    distribs=rep("unif",n.traits),
+                    distr.parms=list(),
+                    sigma=diag(1,n.traits,n.traits),ITV.ratio=0.01,...)
 {
   parameters<-get("parameters",envir = comsimitvEnv)
   if (is.null(parameters$ITV.params))
     parameters$ITV.params<-list(ITV.ratio=ITV.ratio)
   assign("parameters",parameters,envir = comsimitvEnv)
-  if (!length(distribs)==3) distribs<-rep(distribs[1],3)
-  if (length(distr.parms)==1) distr.parms<-list(a=distr.parms[[1]],b=distr.parms[[1]],c=distr.parms[[1]])
+  
+  if (!length(distribs)==n.traits) distribs<-rep(distribs[1],n.traits)
+  if (length(distr.parms)==1) 
+    {
+    w<-vector("list",n.traits)
+    for (i in 1:n.traits)  w[[i]]<-dist.parms
+    dist.parms<-w
+    }
 
+  
+  
   f<-paste("p",distribs,sep="")
-  seeds[,"trait.a"]<-do.call(f[1],c(list(q=seeds[,"trait.a"]),distr.parms$a))
-  seeds[,"trait.b"]<-do.call(f[2],c(list(q=seeds[,"trait.b"]),distr.parms$b))
-  seeds[,"trait.c"]<-do.call(f[3],c(list(q=seeds[,"trait.c"]),distr.parms$c))
-
-  seeds[,"trait.a"]<-stats::qnorm(seeds[,"trait.a"])
-  seeds[,"trait.b"]<-stats::qnorm(seeds[,"trait.b"])
-  seeds[,"trait.c"]<-stats::qnorm(seeds[,"trait.c"])
-
-  if (sum(sigma==diag(1,3,3))==9)
-  {
-    seeds[,"trait.a"]<-seeds[,"trait.a"]+stats::rnorm(nrow(seeds),0,ITV.ratio)
-    seeds[,"trait.b"]<-seeds[,"trait.b"]+stats::rnorm(nrow(seeds),0,ITV.ratio)
-    seeds[,"trait.c"]<-seeds[,"trait.c"]+stats::rnorm(nrow(seeds),0,ITV.ratio)
-  }
+  for (i in 1:n.traits) 
+    {
+    if (length(distr.parms)>0) seeds[,i+2]<-do.call(f[i],c(list(q=seeds[,i+2]),distr.parms[[i]]))
+    else seeds[,i+2]<-do.call(f[i],list(q=seeds[,i+2]))
+    seeds[,i+2]<-stats::qnorm(seeds[,i+2])
+    }
+  if (mean(sigma==diag(1,n.traits,n.traits))==1)
+    for (i in 1:n.traits)  seeds[,i+2]<-seeds[,i+2]+stats::rnorm(nrow(seeds),0,ITV.ratio)
   else
-  {
-
-    x<-MASS::mvrnorm(n=nrow(seeds),rep(0,3),sigma*ITV.ratio)
-    seeds[,"trait.a"]<-seeds[,"trait.a"]+x[,1]
-    seeds[,"trait.b"]<-seeds[,"trait.b"]+x[,2]
-    seeds[,"trait.c"]<-seeds[,"trait.c"]+x[,3]
-  }
-
-  seeds[,"trait.a"]<-stats::pnorm(seeds[,"trait.a"])
-  seeds[,"trait.b"]<-stats::pnorm(seeds[,"trait.b"])
-  seeds[,"trait.c"]<-stats::pnorm(seeds[,"trait.c"])
-
+    {
+    x<-MASS::mvrnorm(n=nrow(seeds),rep(0,n.traits),sigma*ITV.ratio)
+    for (i in 1:n.traits) seeds[,i+2]<-seeds[,i+2]+x[,i]
+    }
+  
   f<-paste("q",distribs,sep="")
-  seeds[,"trait.a"]<-do.call(f[1],c(list(p=seeds[,"trait.a"]),distr.parms$a))
-  seeds[,"trait.b"]<-do.call(f[2],c(list(p=seeds[,"trait.b"]),distr.parms$b))
-  seeds[,"trait.c"]<-do.call(f[3],c(list(p=seeds[,"trait.c"]),distr.parms$c))
-
+  
+  for (i in 1:n.traits) 
+    {
+    seeds[,i+2]<-stats::pnorm(seeds[,i+2])
+    if (length(distr.parms)>0) seeds[,i+2]<-do.call(f[i],c(list(p=seeds[,i+2]),distr.parms[[i]]))
+    else seeds[,i+2]<-do.call(f[i],list(p=seeds[,i+2]))
+    }
 
   return(seeds)
 }

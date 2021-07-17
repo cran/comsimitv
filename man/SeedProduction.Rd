@@ -4,7 +4,7 @@
 \alias{SeedProduction}
 \title{Calculating number of produced seeds}
 \usage{
-SeedProduction(compet, b0 = 1, K = 200, ...)
+SeedProduction(compet, b0 = 1, K = 200, seed.distrib = c("pois", "binom"), ...)
 }
 \arguments{
 \item{compet}{Matrix of pairwise competition coefficients}
@@ -12,6 +12,8 @@ SeedProduction(compet, b0 = 1, K = 200, ...)
 \item{b0}{Probability of producing seed, if no competition}
 
 \item{K}{Critical level of competition (See Details)}
+
+\item{seed.distrib}{Distribution of seed numbers (See Details)}
 
 \item{...}{any additional parameters}
 }
@@ -23,9 +25,13 @@ Number of seeds calculated following the formula used by Botta-Dukat & Czucz (20
 This built-in function can be replaced by a user-defined one.
 }
 \details{
-Each individual produces one seed or does not produce seed at all.
-Probability of seed production is a decreasing sigmoid function of strength of
+Expected value of produced seeds is a decreasing sigmoid function of strength of
 competition  (sum of abundances weighted by competition coefficients).
 If strength of competition is higher than parameter K, probability is set to
 zero. See \code{vignette("competition")} for formulas
+
+In simulation of Botta-Dukat & Czucz (2016) each individual produces one seed or does 
+not produce seed at all. In this case number of seeds follows binomial distribution 
+(i.e. distrib="binom"). A more realistic alternative is using Poisson distribution 
+(distrib="pois").
 }

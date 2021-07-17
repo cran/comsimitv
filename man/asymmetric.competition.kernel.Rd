@@ -6,6 +6,7 @@
 \usage{
 asymmetric.competition.kernel(
   trait.values,
+  trait.compet = "trait.b",
   ac.type = c("Kisdi", "Nattrass"),
   sigma.b = 0.03,
   ac.C = 1,
@@ -14,7 +15,9 @@ asymmetric.competition.kernel(
 )
 }
 \arguments{
-\item{trait.values}{Values of trait related to resource use}
+\item{trait.values}{Dataframe of all traits}
+
+\item{trait.compet}{Name of trait related to resource use}
 
 \item{ac.type}{Type of the function (see \code{vignette("competition")})}
 
@@ -39,12 +42,12 @@ For formulas and meaning of parameters see the \code{vignette("competition")}
 Kisdi, E. (1999) Evolutionary Branching under Asymmetric
 Competition
 \emph{Journal of Theoretical Biology} \bold{197}(2): 149-162.
-\url{http://dx.doi.org/10.1006/jtbi.1998.0864}
+\doi{10.1006/jtbi.1998.0864}
 
 Nattrass, S., Baigent, S., & Murrell, D. J. (2012) Quantifying
 the Likelihood of Co-existence for Communities with Asymmetric Competition.
 \emph{Bulletin of Mathematical Biology}, \bold{74}(10): 2315–2338.
-\url{http://dx.doi.org/10.1007/s11538-012-9755-8}
+\doi{10.1007/s11538-012-9755-8}
 }
 \seealso{
 \code{\link{competition.kernel}}

@@ -6,10 +6,10 @@
 \usage{
 randomITV(
   seeds = matrix(),
-  distribs = rep("unif", 3),
-  distr.parms = list(a = list(min = 0, max = 1), b = list(min = 0, max = 1), c =
-    list(min = 0, max = 1)),
-  sigma = diag(1, 3, 3),
+  n.traits = 3,
+  distribs = rep("unif", n.traits),
+  distr.parms = list(),
+  sigma = diag(1, n.traits, n.traits),
   ITV.ratio = 0.01,
   ...
 )
@@ -17,6 +17,8 @@ randomITV(
 \arguments{
 \item{seeds}{Matrix of produced seeds (with mother'trait values) as produced by
 \code{\link{SeedProduction}} function}
+
+\item{n.traits}{Number of traits}
 
 \item{distribs}{Types of the distributions of traits (see \code{\link{Gener.species.pool}})}
 

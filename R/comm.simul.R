@@ -53,6 +53,7 @@
 #'         communities are created, with environmental variable equally
 #'         spacing from 0.11 to 0.89
 #'@param S Species pool size
+#'@param n.traits Number of traits
 #'@param J Number of individuals in each community
 #'@param rand.seed
 #'       Random seed number. Setting the same value allows repeating
@@ -101,7 +102,7 @@
 #'functional diversity indices to detect trait convergence and divergence
 #'using individual-based simulation.
 #'\emph{Methods in Ecology and Evolution} \bold{7}(1): 114-126.
-#'\url{http://dx.doi.org/10.1111/2041-210X.12450}
+#'\doi{10.1111/2041-210X.12450}
 #'
 #'@export
 #'
@@ -112,7 +113,7 @@
 #' set.seed(1)
 #' w<-comm.simul(S=20, J=30, fITV=NULL)$final.community
 #' w[w[,2]==1,] # Each individuals belonging to Species1 has the same trait values
-comm.simul<-function(x=vector(),S=200, J=300,rand.seed=NULL, sim.length=1,
+comm.simul<-function(x=vector(),S=200, n.traits=3, J=300,rand.seed=NULL, sim.length=1,
                          fSpecPool="Gener.species.pool",
                          competition.kernel="Gaussian.competition.kernel",
                          fSurvive="Gaussian.tolerance",
@@ -125,6 +126,8 @@ comm.simul<-function(x=vector(),S=200, J=300,rand.seed=NULL, sim.length=1,
   if (length(x)==0) x <- seq(0.1,0.9,0.8/49)
   n<-length(x)
 
+  n.trait<-3
+  
   parameters<-list(x=x,
                    s=S,
                    J=J,
@@ -146,25 +149,17 @@ comm.simul<-function(x=vector(),S=200, J=300,rand.seed=NULL, sim.length=1,
   set.seed(rand.seed)
 
   if (verbose) cat("Generating species pool... \n")
-  traits.modus<-do.call(fSpecPool,c(list(S=S),list(...)))
+  traits.modus<-do.call(fSpecPool,c(list(S=S,n.traits=n.traits),list(...)))
 
   if (verbose) cat("Generating starting community composition...\n")
-  survive <-do.call(fSurvive,c(list(trait.values=traits.modus$a,env=x),list(...)))
+  survive <-do.call(fSurvive,c(list(trait.values=traits.modus,env=x),list(...)))
 
-  Y<-array(NA,dim=c(n,J,4)) # species abundances
-  dimnames(Y)[[3]]<-c("species","trait.a","trait.b","trait.c")
+  Y<-array(NA,dim=c(n,J,n.traits+1)) # species abundances
+  dimnames(Y)[[3]]<-c("species",paste("trait",letters[1:n.traits],sep="."))
   for (i in 1:n)
     Y[i,,"species"]<-sample(1:S,J,replace=TRUE,prob=survive[i,])
-  Y[,,"trait.a"]<-traits.modus$a[Y[,,"species"]]
-  Y[,,"trait.b"]<-traits.modus$b[Y[,,"species"]]
-  Y[,,"trait.c"]<-traits.modus$c[Y[,,"species"]]
-
-  gamma.div<-length(unique(as.vector(Y[,,"species"])))
-  w.alpha<-vector()
-  for (i in 1:n) w.alpha<-c(w.alpha,length(unique(as.vector(Y[i,,"species"]))))
-  alpha.div<-mean(w.alpha)
-  seed.number<-vector()
-  compet.strength<-vector()
+  
+  for (i in 1:n) Y[i,,2:(n.traits+1)]<-as.matrix(traits.modus[Y[i,,"species"],])
 
   if (verbose)
     {
@@ -181,7 +176,7 @@ comm.simul<-function(x=vector(),S=200, J=300,rand.seed=NULL, sim.length=1,
       seed<-vector()
       for (i in 1:n)
       {
-        compet <-do.call(competition.kernel,c(list(trait.values=Y[i,-1,"trait.b"]),list(...)))
+        compet <-do.call(competition.kernel,c(list(trait.values=Y[i,-1,-1]),list(...)))
         w<-do.call(fSeedProduction,c(list(compet=compet,abund=rep(1,J-1)),list(...)))
         # w is a vector with number of seeds produced by each induividuals
         w<-c(0,w) # the first individual died, so it does not produce seeds
@@ -190,9 +185,9 @@ comm.simul<-function(x=vector(),S=200, J=300,rand.seed=NULL, sim.length=1,
             seed<-rbind(seed,c(i,Y[i,kk,]))
       }
 
-      colnames(seed)<-c("site","species","trait.a","trait.b","trait.c")
+      colnames(seed)<-c("site","species",paste("trait",letters[1:n.traits],sep="."))
 
-      if (!is.null(fITV)) seed<-do.call(fITV,c(list(seeds=seed),list(...)))
+      if (!is.null(fITV)) seed<-do.call(fITV,c(list(seeds=seed,n.traits=n.traits),list(...)))
 
       seed<-do.call(fDispersal,c(list(n=n,before=seed),list(...)))
       for (i in 1:n)
@@ -201,7 +196,7 @@ comm.simul<-function(x=vector(),S=200, J=300,rand.seed=NULL, sim.length=1,
        if (ns>1)
         {
           seed.local<-seed[seed[,"site"]==i,-1]
-          survive <-do.call(fSurvive,c(list(trait.values=seed.local[,"trait.a"],env=x[i]),list(...)))
+          survive <-do.call(fSurvive,c(list(trait.values=seed.local,env=x[i]),list(...)))
           Y[i,1,]<-seed.local[sample(1:nrow(seed.local),size=1,prob=survive),]
        }
        if (ns==1) Y[i,1,]<-seed[seed[,"site"]==i,-1]
@@ -213,7 +208,7 @@ comm.simul<-function(x=vector(),S=200, J=300,rand.seed=NULL, sim.length=1,
   if (verbose) close(pb)
   final.community<-vector()
   for (i in 1:n) final.community<-rbind(final.community,cbind(rep(i,J),Y[i,,]))
-  colnames(final.community)<-c("site","species","trait.a","trait.b","trait.c")
+  colnames(final.community)<-c("site","species",paste("trait",letters[1:n.traits],sep="."))
   final.community<-as.data.frame(final.community)
 
   final.community[,"species"]<-paste("sp_",
@@ -224,6 +219,7 @@ comm.simul<-function(x=vector(),S=200, J=300,rand.seed=NULL, sim.length=1,
                                      sep="")
   parameters<-get("parameters",envir = comsimitvEnv)
   ret<-list(final.community=final.community,
-            parameters=parameters)
+            parameters=parameters,
+            traits.modus=traits.modus)
   return(ret)
 }

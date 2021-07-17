@@ -4,12 +4,20 @@
 \alias{Gaussian.tolerance}
 \title{Bell-shaped tolerance function}
 \usage{
-Gaussian.tolerance(trait.values, env, sigma.a = 0.001, ...)
+Gaussian.tolerance(
+  trait.values,
+  env,
+  env.trait = "trait.a",
+  sigma.a = 0.001,
+  ...
+)
 }
 \arguments{
-\item{trait.values}{Values of trait related to habitat preference}
+\item{trait.values}{Dataframe of all traits}
 
 \item{env}{Vector of environmental conditions in the local communities}
+
+\item{env.trait}{Name of trait related to environmental tolerance}
 
 \item{sigma.a}{Tolerance width (same for all species)}
 

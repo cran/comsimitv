@@ -195,7 +195,7 @@ par(oldpar)
 However equation \@ref(eq:eq6) is not defined when $sigma_b=0$ and $B_j=B_i$, following suggestion of Nattrass et al. (2012) `asymmetric.competition.kernel` function set the strength of competition to 1 in this case.
 
 # `SeedProduction` function
-In this function, each individual produces zero or one seed. The probability of reproduction of individual `i` in local community `k` depends on the competition for resources:
+This function calculates number of produced seeds for each individual. The number of seeds is random number from Bernoulli (zero or one seed) or Poisson distribution (unlimited number of seeds). The expected value of produced seeds (irrespectively to the distribution) for individual `i` in local community `k` depends on the competition for resources:
 
 \begin{equation}
 p_{ik}=b_0*\max\left(\frac{K-\sum_{i \in k} \alpha_{ij}}{K},0\right)

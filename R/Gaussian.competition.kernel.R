@@ -13,21 +13,23 @@
 #' resource utilization functions (MacArthur & Levins 1967).See details in
 #' \code{vignette("competition")}
 #'
-#'@param trait.values Values of trait related to resource use
+#'@param trait.values Dataframe of all traits 
+#'@param trait.compet Name of trait related to resource use
 #'@param sigma.b Width of Gaussian kernel
 #'@param ... Any additional parameters
 #'
 #'@references	MacArthur R, Levins R (1967) The Limiting Similarity,
 #'Convergence, and Divergence of Coexisting Species.
 #'\emph{The American Naturalist} \bold{101}: 377-385.
-#'\url{http://dx.doi.org/10.1086/282505}
+#'\doi{10.1086/282505}
 #'@seealso \code{\link{competition.kernel}}
-Gaussian.competition.kernel<-function(trait.values,sigma.b=0.03,...)
+Gaussian.competition.kernel<-function(trait.values,trait.compet="trait.b",sigma.b=0.03,...)
 {
   parameters<-get("parameters",envir = comsimitvEnv)
   if (is.null(parameters$competition.kernel.params))
-    parameters$competition.kernel.params<-list(sigma.b=sigma.b)
+    parameters$competition.kernel.params<-list(sigma.b=sigma.b,trait.compet=trait.compet)
   assign("parameters",parameters,envir = comsimitvEnv)
+  trait.values<-trait.values[,trait.compet]
   S=length(trait.values)
   compet <- matrix(0,S,S)
   if (sigma.b==0) diag(compet) <- 1

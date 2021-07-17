@@ -29,38 +29,53 @@
 #'   by the user.
 #'
 #'@param S Species pool size
+#'@param n.traits Number of traits
 #'@param distribs Types of the distributions of traits
 #'@param distr.parms Parameters of distribution (see Details)
 #'@param sigma Matrix of variance-covariance matrix of traits
 #'@param ... Any additional parameters
-#'@return A list with three elemets:
-#'@return               a = vector of fist trait,
-#'@return               b = vector of second trait,
-#'@return               c = vector of third trait
-Gener.species.pool<-function(S,distribs=rep("unif",3),
-                             distr.parms=list(a=list(min=0,max=1),b=list(min=0,max=1),c=list(min=0,max=1)),
-                             sigma=diag(1,3,3),...)
+#'@return A data frame with traits as columns
+
+
+Gener.species.pool<-function(S,n.traits=3,distribs=rep("unif",n.traits),
+                             distr.parms=list(),
+                             sigma=diag(1,n.traits,n.traits),...)
 {
-  if (!length(distribs)==3) distribs<-rep(distribs[1],3)
-  if (length(distr.parms)==1) distr.parms<-list(a=distr.parms[[1]],b=distr.parms[[1]],c=distr.parms[[1]])
-  if (sum(sigma==diag(1,3,3))==9)
+  if (length(distribs)==1) distribs<-rep(distribs,n.traits)
+  if (!(length(distribs)==n.traits)) stop("Number of distributions should be equal to number of traits!")
+  if (length(distribs)>0)
+    {
+    if (length(distr.parms)==1) 
+      {
+      w<-vector("list",n.traits)
+      for (i in 1:n.traits)  w[[i]]<-dist.parms
+      dist.parms<-w
+      }
+    if (length(distr.parms)<n.traits)
+      {
+      w<-vector("list",n.traits)
+      w[[1:length(distr.parms)]]<-distr.parms
+      distr.parms<-w
+      warning("Less parameter set than traits! Default parameters will be used.")
+      }
+    }
+  
+  
+  traits<-matrix(NA,nrow=S,ncol=n.traits)
+  colnames(traits)<-paste("trait",letters[1:n.traits],sep=".")
+  traits<-as.data.frame(traits)
+  if (mean(sigma==diag(1,n.traits,n.traits))==1)
   {
     f<-paste("r",distribs,sep="")
-    trait.a<-do.call(f[1],c(list(n=S),distr.parms$a))
-    trait.b<-do.call(f[2],c(list(n=S),distr.parms$b))
-    trait.c<-do.call(f[3],c(list(n=S),distr.parms$c))
+    for (i in 1:n.traits) traits[,i]<-do.call(f[i],c(list(n=S),distr.parms[[i]]))
   }
   else
   {
-    x<-MASS::mvrnorm(n=S,rep(0,3),sigma)
+    x<-MASS::mvrnorm(n=S,rep(0,n.traits),sigma)
     f<-paste("q",distribs,sep="")
-    trait.a<-do.call(f[1],c(list(p=stats::pnorm(x[,1])),distr.parms$a))
-    trait.b<-do.call(f[2],c(list(p=stats::pnorm(x[,2])),distr.parms$b))
-    trait.c<-do.call(f[3],c(list(p=stats::pnorm(x[,3])),distr.parms$c))
+    traits[,i]<-do.call(f[i],c(list(p=stats::pnorm(x[,i])),distr.parms[[i]]))
   }
-  traits<-list(a=trait.a,
-               b=trait.b,
-               c=trait.c)
-  return(traits)
+  
+return(traits)
 }
 

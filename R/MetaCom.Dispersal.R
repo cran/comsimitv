@@ -25,9 +25,12 @@
   after<-before
   for (u in 1:nrow(before))
   {
-    prob<-rep(m/(n-1),n)
-    prob[before[u,"site"]]<-(1-m)
-    after[u,"site"]<-sample(1:n,size=1,prob=prob)
+    if (sum(after[,"site"]==after[u,"site"])>1)
+      {
+      prob<-rep(m/(n-1),n)
+      prob[before[u,"site"]]<-(1-m)
+      after[u,"site"]<-sample(1:n,size=1,prob=prob)
+      }
   }
   return(after)
 }

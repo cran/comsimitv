@@ -4,10 +4,17 @@
 \alias{Gaussian.competition.kernel}
 \title{Gaussian competition kernel}
 \usage{
-Gaussian.competition.kernel(trait.values, sigma.b = 0.03, ...)
+Gaussian.competition.kernel(
+  trait.values,
+  trait.compet = "trait.b",
+  sigma.b = 0.03,
+  ...
+)
 }
 \arguments{
-\item{trait.values}{Values of trait related to resource use}
+\item{trait.values}{Dataframe of all traits}
+
+\item{trait.compet}{Name of trait related to resource use}
 
 \item{sigma.b}{Width of Gaussian kernel}
 
@@ -32,7 +39,7 @@ resource utilization functions (MacArthur & Levins 1967).See details in
 MacArthur R, Levins R (1967) The Limiting Similarity,
 Convergence, and Divergence of Coexisting Species.
 \emph{The American Naturalist} \bold{101}: 377-385.
-\url{http://dx.doi.org/10.1086/282505}
+\doi{10.1086/282505}
 }
 \seealso{
 \code{\link{competition.kernel}}

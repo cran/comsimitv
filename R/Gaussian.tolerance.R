@@ -7,18 +7,20 @@
 #' environmental value departs from the optimum according to a Gaussian (bell-shaped)
 #' curve. The speed of decrease depends on the tolerance width parameter (\code{sigma.a}).
 #'
-#'@param trait.values Values of trait related to habitat preference
+#'@param trait.values Dataframe of all traits 
 #'@param env Vector of environmental conditions in the local communities
+#'@param env.trait Name of trait related to environmental tolerance
 #'@param sigma.a Tolerance width (same for all species)
 #'@param ... Any additional parameters
 #'@return A matrix of survival probabilities, communities in rows, species/individuals in columns
 #'@seealso \code{\link{tolerance}}
-Gaussian.tolerance<-function(trait.values,env,sigma.a=0.001,...)
+Gaussian.tolerance<-function(trait.values,env,env.trait="trait.a",sigma.a=0.001,...)
 {
   parameters<-get("parameters",envir = comsimitvEnv)
   if (is.null(parameters$Survive.params))
-    parameters$Survive.params<-list(sigma.a=sigma.a)
+    parameters$Survive.params<-list(sigma.a=sigma.a,env.trait=env.trait)
   assign("parameters",parameters,envir = comsimitvEnv)
+  trait.values<-trait.values[,env.trait]
   S<-length(trait.values)
   n<-length(env)
   X<-matrix(rep(env,S),ncol=S)

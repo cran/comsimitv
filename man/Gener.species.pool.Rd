@@ -6,15 +6,17 @@
 \usage{
 Gener.species.pool(
   S,
-  distribs = rep("unif", 3),
-  distr.parms = list(a = list(min = 0, max = 1), b = list(min = 0, max = 1), c =
-    list(min = 0, max = 1)),
-  sigma = diag(1, 3, 3),
+  n.traits = 3,
+  distribs = rep("unif", n.traits),
+  distr.parms = list(),
+  sigma = diag(1, n.traits, n.traits),
   ...
 )
 }
 \arguments{
 \item{S}{Species pool size}
+
+\item{n.traits}{Number of traits}
 
 \item{distribs}{Types of the distributions of traits}
 
@@ -25,13 +27,7 @@ Gener.species.pool(
 \item{...}{Any additional parameters}
 }
 \value{
-A list with three elemets:
-
-a = vector of fist trait,
-
-b = vector of second trait,
-
-c = vector of third trait
+A data frame with traits as columns
 }
 \description{
 It generates random trait values for species. Each species (individual)

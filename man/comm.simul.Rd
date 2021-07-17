@@ -7,6 +7,7 @@
 comm.simul(
   x = vector(),
   S = 200,
+  n.traits = 3,
   J = 300,
   rand.seed = NULL,
   sim.length = 1,
@@ -26,6 +27,8 @@ communities are created, with environmental variable equally
 spacing from 0.11 to 0.89}
 
 \item{S}{Species pool size}
+
+\item{n.traits}{Number of traits}
 
 \item{J}{Number of individuals in each community}
 
@@ -139,5 +142,5 @@ Botta-Dukat Z, Czucz B (2016) Testing the ability of
 functional diversity indices to detect trait convergence and divergence
 using individual-based simulation.
 \emph{Methods in Ecology and Evolution} \bold{7}(1): 114-126.
-\url{http://dx.doi.org/10.1111/2041-210X.12450}
+\doi{10.1111/2041-210X.12450}
 }
